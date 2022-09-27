@@ -86,15 +86,19 @@ int main(int argc, char const *argv[]) {
     for (auto &img : vidar_data.images) {
       cv::Mat raw_mat, bgr_mat;
       pg::utils::helper::ImageFrame2CvMat(*img, raw_mat, false, false);
-      cv::cvtColor(raw_mat, bgr_mat, cv::COLOR_YUV2BGR_I420);
+      if (kPGPixelFormatRawI420 == img->pixel_format) {
+        cv::cvtColor(raw_mat, bgr_mat, cv::COLOR_YUV2BGR_I420);
+      } else if (kPGPixelFormatRawGRAY == img->pixel_format) {
+        cv::cvtColor(raw_mat, bgr_mat, cv::COLOR_GRAY2BGR);
+      }
       // cv::imshow(std::to_string(img->channel_id), bgr_mat);
-      // cv::imwrite(std::to_string(img->channel_id) + "_" +
-      //                 std::to_string(counter) + ".png",
-      //             bgr_mat);
+      cv::imwrite(std::to_string(img->time_stamp) + "_ns_" +
+                      std::to_string(img->channel_id) + ".png",
+                  bgr_mat);
       LOG(INFO) << "recv channel_id=" << img->channel_id;
     }
     auto key = cv::waitKey(5);
-    if (key == 'x') {
+    if (key == 'x' || counter > 1000) {
       break;
     }
   }
