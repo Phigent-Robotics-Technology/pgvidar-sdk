@@ -1,0 +1,14 @@
+{
+    "IComConfig": {
+        "type": 0,
+        "logic_channel_id": 0,
+        "usb_host": {
+            "dev_vendor_id": 7531,
+            "dev_product_id": 261
+        }
+    },
+    "port": 50051,
+    "SourceVideoStream":{
+        "channel_id" : [0, 1]
+    }
+}
