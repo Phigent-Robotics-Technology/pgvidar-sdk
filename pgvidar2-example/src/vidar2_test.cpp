@@ -1,4 +1,3 @@
-
 #include <chrono>
 #include <cstdio>
 #include <memory>
@@ -58,9 +57,11 @@ int main(int argc, char const *argv[]) {
     return -1;
   }
   const char *cfg_file_name = argv[1];
+  const char *flow_file_name = argv[2];
   using namespace pg::vidar;
   std::unique_ptr<VidarInterface> vidar(VidarInterface::Create());
   auto conf_json = ReadTextFile(cfg_file_name);
+  auto flow_json = ReadTextFile(flow_file_name);
   int Init_Status = vidar->Init(conf_json);
   // Check if VidarInterface is successful
   if (Init_Status < 0) {
@@ -70,7 +71,16 @@ int main(int argc, char const *argv[]) {
     return 0;
   }
   FpsCounter fps_counter;
+  FpsCounter imu_counter;
   VidarData vidar_data;
+  std::string ret_str;
+  int GetConfig_Status = -1;
+  while(GetConfig_Status < 0){
+    GetConfig_Status = vidar->GetConfig(flow_json, ret_str);
+  }
+  LOG(INFO) << "GetConfig_Status: " << GetConfig_Status;
+  LOG(INFO) << "test config receive: " << ret_str;
+  
   while (true) {
     int ret = vidar->RecvData(&vidar_data, 1000);
     if (ret < 0 || vidar_data.images.empty()) {
@@ -83,8 +93,9 @@ int main(int argc, char const *argv[]) {
       LOG(INFO) << "Output fps=" << fps_counter.Compute();
       fps_counter.Update(0, std::chrono::high_resolution_clock::now());
     }
+    
     for (auto &img : vidar_data.images) {
-      cv::Mat raw_mat, bgr_mat;
+     cv::Mat raw_mat, bgr_mat;
       pg::utils::helper::ImageFrame2CvMat(*img, raw_mat, false, false);
       if (kPGPixelFormatRawI420 == img->pixel_format) {
         cv::cvtColor(raw_mat, bgr_mat, cv::COLOR_YUV2BGR_I420);
@@ -93,9 +104,19 @@ int main(int argc, char const *argv[]) {
       }
       // cv::imshow(std::to_string(img->channel_id), bgr_mat);
       cv::imwrite(std::to_string(img->time_stamp) + "_ns_" +
-                      std::to_string(img->channel_id) + ".png",
-                  bgr_mat);
+                     std::to_string(img->channel_id) + ".png",
+                 bgr_mat);
       LOG(INFO) << "recv channel_id=" << img->channel_id;
+    }
+    
+    for (auto &imu : vidar_data.imu) {
+      LOG(INFO) << "recv imu" << imu;
+      imu_counter.AddOne();
+      auto icounter = imu_counter.FrameCount();
+      if (icounter % 100 == 0) {
+        LOG(INFO) << "Imu Output fps=" << imu_counter.Compute();
+        imu_counter.Update(0, std::chrono::high_resolution_clock::now());
+      }
     }
     auto key = cv::waitKey(5);
     if (key == 'x' || counter > 1000) {
