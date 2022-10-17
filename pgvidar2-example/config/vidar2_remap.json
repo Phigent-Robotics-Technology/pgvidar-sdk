@@ -1,0 +1,4 @@
+{
+    "action": "GetSourceVideoStream",
+    "type": "REMAP"
+}
