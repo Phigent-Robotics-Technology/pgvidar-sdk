@@ -26,6 +26,7 @@ using std::string;
 ***/
 struct VidarData {
   std::vector<phigent::vision::ImageFramePtr> images;
+  std::vector<std::string> imu;
 };
 
 class VidarInterface {
@@ -89,14 +90,30 @@ class VidarInterface {
    */
   virtual int UpdateConfig(const std::string &conf_json) = 0;
   /**
-   * @brief 根据req_json内容获取配置信息
-   * @note
-   * @param req_json: [in] 请求json字符串，里面包含请求config的key
-   * @param ret_conf_json: [out] 返回的config
-   * json字符串指针，释放请调用free(ret_conf_json)
-   * @return int
+   * @brief
+   * 根据conf_json内容获取配置信息并且跟进配置文件激活输出未校正或者矫正后图片的板端服务流程
+   * @note   * @param conf_json: [in] 请求json字符串，里面包含请求config的key
+   * @param return_conf_json: [out]
+   * 返回的config字符串,需要在该接口调用前初始化，格式模板如下
+   * {
+   *    "camera" :
+   *    {
+   *            "calib" : "%YAML:1.0",
+   *            "product_number" : "P06002M160-B0X",
+   *            "serial_number" : "P03002360000X",
+   *            "shift" : -1,
+   *            "version" : "0.0.X"
+   *    }
+   * }
+   * @return int  激活板端服务成功并且获取相机信息时返回 0，
+   * 激活板端服务成功但是没有获取相机信息时返回 1，
+   * 激活板端服务成功但是没有获取相机信息时返回 2，完全失败返回-1
+   * 返回码为1时，板端服务激活，但是相机信息获取失败，此时重新调用GetConfig即可获取相机信息
+   * 返回码为2时，板端服务已经激活，相机信息获取成功，此时如果想重新选择板端服务类型需要重启板端程序
+   * 返回码为-1时，请检查usb链接
    */
-  virtual int GetConfig(const std::string &conf_json, char **ret_conf_json) = 0;
+  virtual int GetConfig(const std::string &conf_json,
+                        std::string &return_conf_json) = 0;
 };
 }  // namespace vidar
 
