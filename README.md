@@ -22,12 +22,10 @@ pgvidar-sdk是由鉴智机器人设计并开发的一款配合视觉雷达板端
 
 ### 运行example
 
-`tar -xf pgvidar2-v1.0.x.tgz`
+获取未矫正原图
 
-`cd pgvidar2/pgvidar2-example/`
+`sudo LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../lib ./build/vidar2_test config/vidar2_cfg.json ./build/vidar2_test config/vidar2_orig.json`
 
-`mkdir build`
+获取矫正图
 
-`cd build && cmake .. && make && cd ..`
-
-`sudo LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/../lib ./build/vidar2_test config/vidar2_cfg.json`
+`sudo LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../lib ./build/vidar2_test config/vidar2_cfg.json ./build/vidar2_test config/vidar2_remap.json`
